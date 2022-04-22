@@ -1,51 +1,40 @@
-import json
-
 from flask import Flask
+
+from utilit import get_candidates, format_candidates, get_candidate_id, get_candidate_skill
 
 app = Flask(__name__)
 
-with open('candidates.json', 'r', encoding='utf-8') as file:  # открывает файл для чтения
-    candidates = json.loads(file.read())  # переменная хранит файл в виде словаря
 
 
-@app.route('/')  # '/' это означает первая(стартовая) страница
+@app.route('/')
 def page_index():
     """Выводит на главную страницу список кандидатов"""
-    inf_candidate = ""  # пустая строка информация о кандидате
-    for i in range(len(candidates)):  # проходя по всем ключам
-        name = candidates[i]['name']  # переменная хранит значение по ключу 'name'
-        position = candidates[i]['position']  # переменная хранит значение по ключу 'position'
-        skills = candidates[i]['skills']  # переменная хранит значение по ключу 'skills'
-        inf_candidate += f'{name} - \n{position}\n{skills}\n\n'  # запись переменных в строку
+    candidates_list = get_candidates('candidates.json')
 
-    return f"<h1><pre>{inf_candidate}<pre><h1>"  # возвращает информацию о всех кандидатах
+    return format_candidates(candidates_list)
 
 
-@app.route('/candidates/<name>')  # <....> это скобки аргумента, т.е. конкретно
-def page_candidates(name: str):
-    inf_candidate = ""
-    for i in range(len(candidates)):  # проходя по всем ключам
-        if name.lower() == candidates[i]['name'].lower():
-            name = candidates[i]['name']  # переменная хранит значение по ключу 'name'
-            position = candidates[i]['position']  # переменная хранит значение по ключу 'position'
-            skills = candidates[i]['skills']  # переменная хранит значение по ключу 'skills'
-            picture = candidates[i]['picture']
-            inf_candidate += f'<img src={picture}>\n{name} - \n{position}\n{skills}\n\n'
+@app.route('/candidates/<int:candidate_id>')
+def page_candidates(candidate_id):
+    """Выводит на страницу информацию на конкретного кандидата"""
+    candidates_list = get_candidates('candidates.json')
+    candidate = get_candidate_id(candidates_list, candidate_id)
+    result = f"<img src={candidate['picture']}>"
 
-    return f"<pre>{inf_candidate}<pre>"
+    return result + format_candidates([candidate])
+"""
+Возвращает переменную и возврат функции get_candidate_id через функцию format_candidates
+"""
 
 
 @app.route('/skills/<skill>')
-def page_skills(skill: str):
-    inf_candidate = ""
-    for i in range(len(candidates)):  # проходя по всем ключам
-        if skill.lower() in candidates[i]['skills'].lower():
-            name = candidates[i]['name']  # переменная хранит значение по ключу 'name'
-            position = candidates[i]['position']  # переменная хранит значение по ключу 'position'
-            skills = candidates[i]['skills']  # переменная хранит значение по ключу 'skills'
-            inf_candidate += f'{name} - \n{position}\n{skills}\n\n'  # запись переменных в строку
+def page_skills(skill):
+    candidates_list = get_candidates('candidates.json')
 
-    return f"<pre>{inf_candidate}<pre>"
+    return format_candidates(get_candidate_skill(candidates_list, skill))
+"""
+Возвращает возврат функции get_candidate_skill по аргументам внутри функции format_candidates
+"""
 
 
 if __name__ == "__main__":
